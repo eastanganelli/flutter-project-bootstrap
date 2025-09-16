@@ -1,0 +1,34 @@
+{
+  // Make the Flutter extension use the project-local Flutter SDK first.
+  // Use flutterSdkPaths for cross-platform fallback if you share this repo.
+  "dart.flutterSdkPaths": [
+    "${workspaceFolder}/.tooling/flutter",
+    "${env:USERPROFILE}\\.project-tools\\${workspaceFolderBasename}\\flutter",
+    "${env:HOME}/.project-tools/${workspaceFolderBasename}/flutter"
+  ],
+
+  // Ensure terminals in VS Code use the project-local Android SDK and Flutter.
+  // This affects only Integrated Terminal shells (not global system shells).
+  "terminal.integrated.env.windows": {
+    "ANDROID_SDK_ROOT": "${workspaceFolder}\\.tooling\\android-sdk",
+    "ANDROID_HOME": "${workspaceFolder}\\.tooling\\android-sdk",
+    "PATH": "${workspaceFolder}\\.tooling\\flutter\\bin;${workspaceFolder}\\.tooling\\android-sdk\\platform-tools;${workspaceFolder}\\.tooling\\android-sdk\\cmdline-tools\\latest\\bin;${env:PATH}"
+  },
+  "terminal.integrated.env.linux": {
+    "ANDROID_SDK_ROOT": "${workspaceFolder}/.tooling/android-sdk",
+    "ANDROID_HOME": "${workspaceFolder}/.tooling/android-sdk",
+    "PATH": "${workspaceFolder}/.tooling/flutter/bin:${workspaceFolder}/.tooling/android-sdk/platform-tools:${workspaceFolder}/.tooling/android-sdk/cmdline-tools/latest/bin:${env:PATH}"
+  },
+
+  // Optional quality-of-life
+  "files.watcherExclude": {
+    "**/.dart_tool/**": true,
+    "**/build/**": true,
+    "**/.tooling/**": true
+  },
+  "search.exclude": {
+    "**/.tooling/**": true,
+    "**/.dart_tool/**": true,
+    "**/build/**": true
+  }
+}

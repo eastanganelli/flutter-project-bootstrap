@@ -97,20 +97,23 @@ def ensure_prereqs():
             raise SystemExit("Java 17 not found on PATH. Install JDK 17 and re-run.\nLinux: sudo apt install openjdk-17-jdk")
 
 def install_flutter(flutter_root: Path, env_map):
+    FLUTTER_GITHUB: str = "https://github.com/flutter/flutter"
     flutter_exe = flutter_bin(flutter_root)
     if Path(flutter_exe).exists():
         log(f"Flutter already present at {flutter_root}")
         return
-    channel = env_map.get("FLUTTER_CHANNEL","stable")
-    ref = env_map.get("FLUTTER_REF","").strip()
+    # channel = env_map.get("FLUTTER_CHANNEL","stable")
+    channel = env_map["FLUTTER_CHANNEL"]
+    # ref = env_map.get("FLUTTER_REF","").strip()
+    ref = str(env_map["FLUTTER_REF"]) if "FLUTTER_REF" in env_map else ""
     log(f"Installing Flutter into {flutter_root} ...")
     flutter_root.parent.mkdir(parents=True, exist_ok=True)
     if ref:
-        run_checked(["git","clone","--depth","1","https://github.com/flutter/flutter", str(flutter_root)])
+        run_checked(["git","clone","--depth","1",FLUTTER_GITHUB, str(flutter_root)])
         run_checked(["git","fetch","origin", ref, "--depth","1"], cwd=str(flutter_root))
         run_checked(["git","checkout", ref], cwd=str(flutter_root))
     else:
-        run_checked(["git","clone","--depth","1","-b", channel, "https://github.com/flutter/flutter", str(flutter_root)])
+        run_checked(["git","clone","--depth","1","-b", channel, FLUTTER_GITHUB, str(flutter_root)])
 
 def install_android_cmdline(android_sdk: Path, env_map):
     sdk_mgr = Path(sdkmanager_bin(android_sdk))
@@ -160,19 +163,22 @@ def install_android_packages(android_sdk: Path, env_map, flutter_root: Path):
         err(f"License acceptance had warnings: {e}")
 
     # Install packages
-    platform_id    = env_map.get("ANDROID_PLATFORM", "android-34")
-    build_tools_id = env_map.get("ANDROID_BUILD_TOOLS", "34.0.0")
-    ndk_id         = env_map.get("ANDROID_NDK", "26.1.10909125")
-    cmake_id       = env_map.get("ANDROID_CMAKE", "3.22.1")
+    platforms_list = []
+    platforms_id   = env_map["ANDROID_PLATFORMS"].split(',')
+    for platform_id in platforms_id:
+        platforms_list.append(f"platforms;{platform_id}")
+    build_tools_id = env_map["ANDROID_BUILD_TOOLS"]
+    ndk_id         = env_map["ANDROID_NDK"]
+    cmake_id       = env_map["ANDROID_CMAKE"]
 
-    log("Installing Android SDK components...")
+    log("Installing Android SDK components...")       
     pkgs = [
         "platform-tools",
-        f"platforms;{platform_id}",
         f"build-tools;{build_tools_id}",
         f"cmake;{cmake_id}",
         f"ndk;{ndk_id}",
     ]
+    pkgs += platforms_list
     run_checked([sdkmanager, f"--sdk_root={android_sdk}", *pkgs], env=env)
 
     # Configure Flutter + precache
@@ -230,7 +236,7 @@ def ensure_msvc_on_windows():
 
 def main():
     # Versions via .env
-    env_map = load_env_file(".env")
+    env_map = load_env_file(".env.config")
 
     repo_root = Path.cwd()
     tooling = repo_root / ".tooling"
